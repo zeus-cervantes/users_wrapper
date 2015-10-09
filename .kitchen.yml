@@ -1,0 +1,88 @@
+---
+driver:
+  name: rackspace
+  rackspace_username: smbmarquee
+  rackspace_api_key: 2ea2333b15294b7b80bdba69ccc0c4d4
+  flavor_id: performance1-2
+
+driver_config:
+  require_chef_omnibus: true
+transport:
+  compression: none
+provisioner:
+  name: chef_zero
+  environments_path: "environments"
+  data_bags_path: "data_bags"
+#  encrypted_data_bag_secret_key_path: ".encrypted_data_bag_secret"
+  require_chef_omnibus: latest
+  client_rb:
+      environment: preproduction
+  attributes:
+    testkitchen: true
+    rackspace:
+      cloud_credentials:
+        api_key: <%= ENV['RACKSPACE_API_KEY'] %>
+        username: <%= ENV['RACKSPACE_USERNAME'] %>
+    openssh:
+      server:
+        password_authentication: 'yes'
+        permit_root_login: 'yes'
+    cloud:
+      public_ipv4: '127.0.0.1'
+    elkstack:
+      config:
+        backups:
+          enabled: false
+    elasticsearch:
+      allocated_memory: '512m' # prevent out of memory exception in jenkins tests
+      network.host: '127.0.0.1'
+      network:
+        host: '127.0.0.1'
+      index:
+        number_of_replicas: 0
+        # so the kitchen node doesn't have unallocated replica shards
+        # and comes up green (healthy) instead of yellow
+      discovery:
+        zen:
+          minimum_master_nodes: 1 # since search returns more than one, but they are fake
+          ping:
+            unicast:
+              hosts: '127.0.0.1'
+    authorization:
+      sudo:
+        users: ['vagrant']
+        passwordless: true
+    platformstack:
+      cloud_backup:
+        enabled: false
+      omnibus_updater:
+        enabled: false
+      iptables:
+        allow_ssh_from_world: true
+platforms:
+  - name: centos-6.6
+suites:
+  - name: myusers-default
+    run_list:
+      - "recipe[myusers::default]"
+    attributes:
+#  - name: endclothing-web
+#    run_list:
+#      - "recipe[942053-endclothing::endclothing-default]"
+#      - "recipe[942053-endclothing::endclothing-web]"
+#    attributes:
+#  - name: endclothing-launches
+#    run_list:
+#      - "recipe[942053-endclothing::endclothing-default]"
+#      - "recipe[942053-endclothing::endclothing-launches]"
+#  - name: endclothing-admin-cron
+#    run_list:
+#      - "recipe[942053-endclothing::endclothing-default]"
+#      - "recipe[942053-endclothing::endclothing-admin]"      
+#      - "recipe[942053-endclothing::endclothing-admin-cron]"
+#    attributes:
+#  - name: endclothing-elk
+#    run_list:
+#      - "recipe[942053-endclothing::endclothing-default]"
+#      - "recipe[942053-endclothing::endclothing-elk]"
+#    attributes:

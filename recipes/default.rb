@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: myusers
+# Cookbook Name:: users_wrapper
 # Recipe:: default
 #
 # Copyright (C) 2015 YOUR_NAME
@@ -67,11 +67,19 @@ users_processed.each do |user|
   if update_user_data 
     Chef::DataBagItem.destroy(users_env_results_databag_name, user['name']) if users_env_results.include?(user['name']) 
     new_user={}
-    user.each{ |key, value| new_user=new_user.merge({key => value}) if key!='name' }
+    user.each{ |key, value| new_user=new_user.merge({key => value}) if key!='name' and !value.nil? and value.size > 0 }
     new_user_databag_item = Chef::DataBagItem.from_hash(new_user)
+    new_user_databag_item.data_bag(users_env_results_databag_name)
     new_user_databag_item.save
   end
-  
+  file "/tmp/#{user['name']}" do
+    content new_user.to_json
+  end
+end
+
+#Removing the ones not present in users_processed (means that ones have been deleted from data bags)
+users_env_results.each do |user|
+  Chef::DataBagItem.destroy(users_env_results_databag_name, user) unless users_processed.include?(user)
 end
 
 
